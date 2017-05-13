@@ -1,0 +1,158 @@
+---
+title: "Using `censusVN2009`"
+author: "Marc Choisy"
+date: "`r Sys.Date()`"
+---
+
+```{r include = FALSE}
+knitr::knit_hooks$set(margin = function(before, options, envir) {
+  if (before) par(mgp = c(1.5, .5, 0), bty = "n", plt = c(.105, .97, .13, .97))
+  else NULL
+})
+
+knitr::opts_chunk$set(margin = TRUE, prompt = TRUE, comment = "",
+                      collapse = TRUE, cache = FALSE,
+                      dev.args = list(pointsize = 11), fig.height = 3.5,
+                      fig.width = 4.24725, fig.retina = 2, fig.align = "center")
+```
+
+This package contains the polygons of the communes (11,163), districts (703) and
+provinces (63) or Vietnam after the last major administrative border update of
+2008, January 1st (essentially the merging of the provinces of Ha Tay and Ha
+Noi), together with the populations sizes from the 2009 census as attributes.
+
+## Installation and loading
+
+You can install censusVN2009 from github with:
+
+```{r eval = FALSE}
+# install.packages("devtools")
+devtools::install_github("choisy/censusVN2009")
+```
+
+Once installed, you can load the package:
+
+```{r}
+library(censusVN2009)
+```
+
+
+## Usage examples
+
+The package contains 6 `SpatialPolygonsDataFrame`: `communes`, `districts`, and
+`provinces` for low polygons resolution and `communes_r`, `districts_r`, and
+`provinces_r` for high polygons resolution. These objects can be loaded with the
+base R `data` function:
+
+```{r}
+data(communes)
+data(districts)
+data(provinces)
+```
+
+And can be plotted with the `sp` `plot` method:
+
+```{r}
+library(sp)
+plot(communes)
+plot(districts)
+plot(provinces)
+```
+
+The attributes of these spatial objects are:
+
+```{r}
+head(communes@data)
+head(districts@data)
+head(provinces@data)
+```
+
+And we can verify the consistency between the 3 spatial objects:
+
+```{r}
+length(communes_r)
+length(unique(communes_r$district_id))
+length(districts_r)
+setdiff(communes_r$district_id, districts_r$district_id)
+length(unique(districts_r$province_id))
+length(provinces_r)
+setdiff(provinces_r$province_id, districts_r$province_id)
+```
+
+Total population size and area:
+
+```{r}
+sum(provinces$population)
+sum(provinces$area) / 100  # km2
+```
+
+Distributions of administrative areas:
+
+```{r}
+hist(communes$area / 100, n = 100, col = "grey", main = NA,
+     xlab = "area", ylab = "frequency")
+hist(districts$area / 100, col = "grey", main = NA,
+     xlab = "area", ylab = "frequency")
+hist(provinces$area / 100, col = "grey", main = NA,
+     xlab = "area", ylab = "frequency")
+```
+
+Distributions of adminitrative units' populations sizes:
+
+```{r}
+hist(communes$population, n = 100, col = "grey", main = NA,
+     xlab = "population size", ylab = "frequency")
+hist(districts$population, col = "grey", main = NA,
+     xlab = "population size", ylab = "frequency")
+hist(provinces$population, n = 15, col = "grey", main = NA,
+     xlab = "population size", ylab = "frequency")
+```
+
+Distributions of the administrative units' populations densities:
+
+```{r}
+with(communes@data, hist(log10(100 * population / area), n = 100, col = "grey",
+                         main = NA, xlab = "population density", ylab = "frequency"))
+with(districts@data, hist(log10(100 * population / area), n = 100, col = "grey",
+                         main = NA, xlab = "population density", ylab = "frequency"))
+with(provinces@data, hist(log10(100 * population / area), n = 15, col = "grey",
+                         main = NA, xlab = "population density", ylab = "frequency"))
+```
+
+Relationship between communes populations and areas:
+
+```{r}
+plot(population ~ area, communes@data)
+plot(population ~ area, communes@data, log = "xy")
+```
+
+Let's now map the populations sizes. Let's first make a palette of colors form
+`RColorBrewer`:
+
+```{r}
+n <- 9
+pal <- RColorBrewer::brewer.pal(n, "Blues")
+```
+
+Let's find a classes intervals definition:
+
+```{r}
+library(classInt)
+tmp <- classIntervals(districts$population, n = n, style = "quantile")
+plot(tmp, pal = pal, main = NA)
+```
+
+Once we're satisfied with the class interval definition we can plot the map:
+
+```{r}
+plot(districts, col = findColours(tmp, pal))
+```
+
+Same thing for the human population densities:
+
+```{r}
+tmp <- classIntervals(districts$population / districts$area, n = n, style = "quantile")
+plot(tmp, pal = pal, main = NA)
+plot(districts, col = findColours(tmp, pal))
+```
+

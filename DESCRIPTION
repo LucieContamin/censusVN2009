@@ -1,0 +1,15 @@
+Package: censusVN2009
+Type: Package
+Title: Shape files of Vietnam after 2008 with census 2009
+Version: 0.1.0
+Author: Marc Choisy
+Maintainer: Marc Choisy <marc.choisy@ird.fr>
+Description: Contains the shape files of the administrative divisions of Vietnam
+    as of after 2008 (i.e. with 63 provinces), together with the populations
+    sizes from the 2009 census as attributes
+License: MIT
+LazyData: TRUE
+RoxygenNote: 5.0.1
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr
