@@ -1,6 +1,7 @@
 library(rgdal)     # for "readOGR"
 library(maptools)  # for "thinnedSpatialPoly"
 library(dplyr)
+library(magrittr)
 
 provinces_r <- readOGR("data-raw/Polygons", "provinces")
 districts_r <- readOGR("data-raw/Polygons", "districts")
@@ -135,6 +136,13 @@ provinces <- thinnedSpatialPoly(provinces_r, .01)
 districts <- thinnedSpatialPoly(districts_r, .0036)
 communes <- thinnedSpatialPoly(communes_r, .00145)
 
+# In the attributes, converting factors to characters:
+communes@data %<>% mutate_if(is.factor, as.character)
+districts@data %<>% mutate_if(is.factor, as.character)
+provinces@data %<>% mutate_if(is.factor, as.character)
+communes_r@data %<>% mutate_if(is.factor, as.character)
+districts_r@data %<>% mutate_if(is.factor, as.character)
+provinces_r@data %<>% mutate_if(is.factor, as.character)
 
 # Saving:
 devtools::use_data(provinces, districts, communes, provinces_r, districts_r,
