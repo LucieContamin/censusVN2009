@@ -28,11 +28,7 @@ Noi), together with the populations sizes from the 2009 census as attributes.
 
 ## Installation and loading
 
-<<<<<<< HEAD
 You can install `censusVN2009` from GitHub with:
-=======
-You can install `censusVN2009` from github with:
->>>>>>> 7c374f8fbf792695c82a06e1b4d25582c7a72c27
 
 ```{r eval = FALSE}
 # install.packages("devtools")
