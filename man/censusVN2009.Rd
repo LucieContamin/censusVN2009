@@ -8,4 +8,3 @@
 \description{
 The censusVN2009 package provides the polygons of the communes, districts and provinces of Vietnam as defined since 2008, together with the populations sizes from the 2009 census as attributes.
 }
-
