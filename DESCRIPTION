@@ -9,7 +9,7 @@ Authors@R: person("Marc", "Choisy",
 Description: Contains the shape files of the administrative divisions of Vietnam
     as of after 2008 (i.e. with 63 provinces), together with the populations
     sizes from the 2009 census as attributes
-License: MIT
+License: MIT + file LICENSE
 LazyData: TRUE
 RoxygenNote: 6.0.1
 Suggests: knitr,
