@@ -9,6 +9,10 @@ library(magrittr)  # for %<>%
 # only on the other hand.
 # The idea is (1) to combine polygons and census data for the commune level and
 # (2) to spread census data from commune level to district and province levels.
+# Also note that the Spratley islands (Trường Sa) are included in the province
+# of Khánh Hòa. Likewise, the Paracel island (Hoàng Sa) are included in the
+# province of Đà Nẵng. The polygons of these islands are present only for the
+# province level.
 
 # (1) reading polygons of communes, districts and provinces --------------------
 provinces_r <- readOGR("data-raw/Polygons", "provinces")
