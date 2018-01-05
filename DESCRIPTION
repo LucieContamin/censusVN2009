@@ -8,12 +8,18 @@ Authors@R: person("Marc", "Choisy",
                   comment = c(ORCID = "https://orcid.org/0000-0002-5187-6390"))
 Description: Contains the shape files of the administrative divisions of Vietnam
     as of after 2008 (i.e. with 63 provinces), together with the populations
-    sizes from the 2009 census as attributes
+    sizes from the 2009 census as attributes.
 License: MIT + file LICENSE
 LazyData: TRUE
 RoxygenNote: 6.0.1
+Depends:
+    R (>= 2.10)
 Suggests: knitr,
     rmarkdown,
+    sp,
+    classInt,
     sptools,
-    magrittr
+    magrittr,
+    RColorBrewer
+Remotes: choisy/sptools
 VignetteBuilder: knitr
