@@ -26,10 +26,11 @@ names(communes_r@data) <- c("object_id", "commune_id", "district_id",
                             "commune_vn", "commune", "district_vn", "district",
                             "province_vn", "province", "province_id",
                             "shape_length", "shape_area")
-communes_r@data <- communes_r@data[, c("object_id", "province_id", "district_id",
-                                       "commune_id", "province", "district",
-                                       "commune", "province_vn", "district_vn",
-                                       "commune_vn", "shape_length", "shape_area")]
+communes_r@data <- communes_r@data[, c("object_id", "province_id",
+                                       "district_id", "commune_id", "province",
+                                       "district", "commune", "province_vn",
+                                       "district_vn", "commune_vn",
+                                       "shape_length", "shape_area")]
 
 
 # rearranging the attributes of the districts ----------------------------------
@@ -37,44 +38,49 @@ districts_r@data$UniqueIden <- NULL
 names(districts_r@data) <- c("object_id", "district_id", "district_vn",
                              "district", "province", "level", "type",
                              "province_id", "shape_length", "shape_area")
-hash <- with(lapply(unique(communes@data[, c("province", "province_vn")]), as.character),
+hash <- with(lapply(unique(communes_r@data[, c("province", "province_vn")]),
+                    as.character),
              setNames(province_vn, province))
 districts_r@data$province_vn <- hash[districts_r@data$province]
 
-districts_r@data <- districts_r@data[, c("object_id", "province_id", "district_id",
-                                         "province", "district",
+districts_r@data <- districts_r@data[, c("object_id", "province_id",
+                                         "district_id", "province", "district",
                                          "province_vn", "district_vn",
                                          "shape_length", "shape_area")]
 
 
 # rearranging the attributes of the provinces ----------------------------------
-names(provinces_r@data) <- c("object_id", "province_vn", "province", "province_id",
-                             "shape_length", "shape_area")
+names(provinces_r@data) <- c("object_id", "province_vn", "province",
+                             "province_id", "shape_length", "shape_area")
 
 provinces_r@data <- provinces_r@data[, c("object_id", "province_id", "province",
-                                         "province_vn", "shape_length", "shape_area")]
+                                         "province_vn", "shape_length",
+                                         "shape_area")]
 
 
 # fixing spelling for provinces ------------------------------------------------
-pr <- sub("Ba Ria-Vung Tau", "Ba Ria - Vung Tau", provinces_r@data$province)
-provinces_r@data$province <- sub("Thua Thien Hue", "Thua Thien - Hue", pr)
 
+provinces_r@data$province %<>%
+  stringi::stri_escape_unicode() %>% dictionary::vn_province[.]
+
+provinces_r@data$province_vn %<>% stringi::stri_escape_unicode()
 
 # fixing spelling for districts ------------------------------------------------
-pr <- sub("Ba Ria Vung Tau", "Ba Ria - Vung Tau", districts_r@data$province)
-pr <- sub("Can Tho city", "Can Tho", pr)
-pr <- sub("Da Nang city", "Da Nang", pr)
-pr <- sub("Hai Phong city", "Hai Phong", pr)
-pr <- sub("Ho Chi Minh city", "Ho Chi Minh", pr)
-pr <- sub("Quang BInh", "Quang Binh", pr)
-districts_r@data$province <- sub("Thua Thien Hue", "Thua Thien - Hue", pr)
+
+districts_r@data$province %<>% gsub(" city", "", .) %>% tolower() %>%
+  stringi::stri_escape_unicode() %>% dictionary::vn_province[.]
+
+districts_r@data %<>%
+  mutate_at(vars(matches("_vn")), stringi::stri_escape_unicode)
 
 
 # fxing spelling for communes --------------------------------------------------
-pr <- sub("Thua Thien Hue", "Thua Thien - Hue", communes_r@data$province)
-pr <- sub("Ninh Bình", "Ninh Binh", pr)
-communes_r@data$province <- sub("Ba Ria Vung Tau", "Ba Ria - Vung Tau", pr)
 
+communes_r@data$province %<>%
+  stringi::stri_escape_unicode() %>% dictionary::vn_province[.]
+
+communes_r@data %<>%
+  mutate_at(vars(matches("_vn")), stringi::stri_escape_unicode)
 
 # fixing a commune ID ----------------------------------------------------------
 communes_r@data[communes_r@data$district_id == 60141, "district_id"] <- 60114
@@ -96,7 +102,8 @@ districts_r <- subset(districts_r, !(object_id %in% paste(c(385, 617, 704))))
 # (2) reading the census data (and polygons) of communes -----------------------
 
 census <- readOGR("data-raw/Vietnam_pop_commune", "Vietnam_pop_commune")
-census@data$PRO_NAME_E <- sub("Thua Thien Hue", "Thua Thien - Hue", census@data$PRO_NAME_E)
+census@data$PRO_NAME_E <- sub("Thua Thien Hue", "Thua Thien - Hue",
+                              census@data$PRO_NAME_E)
 census@data$ADDRESS <- NULL
 census@data$Shape_Le_1 <- NULL
 names(census@data) <- c("commune_id", "district_id", "commune_vn", "commune",
@@ -104,19 +111,22 @@ names(census@data) <- c("commune_id", "district_id", "commune_vn", "commune",
                         "province_id", "population", "area", "shape_length",
                         "shape_area")
 census@data <- census@data[, c("commune_id", "district_id", "province_id",
-                               "commune", "district", "province",
-                               "commune_vn", "district_vn", "province_vn",
-                               "population", "area", "shape_length", "shape_area")]
+                               "commune", "district", "province", "commune_vn",
+                               "district_vn", "province_vn", "population",
+                               "area", "shape_length", "shape_area")]
 rownames(census@data) <- NULL
-for(i in seq_along(census@polygons))
-  census@polygons[[i]]@ID <- as.character(as.numeric(census@polygons[[i]]@ID) + 1)
+for (i in seq_along(census@polygons))
+  census@polygons[[i]]@ID <- as.character(
+    as.numeric(census@polygons[[i]]@ID) + 1)
 
 
 # (3) putting polygons and communes census data together -----------------------
 sel <- setdiff(census$commune_id, communes_r$commune_id)
-census <- subset(census, !(commune_id %in% sel)) # there are 18 communes of the census absent from polygons
+# there are 18 communes of the census absent from polygons
+census <- subset(census, !(commune_id %in% sel))
 tmp <- rownames(communes_r@data)
-communes_r <- merge(communes_r, subset(census@data, , c(commune_id, area, population)))
+communes_r <- merge(communes_r, subset(census@data,
+                                    select = c(commune_id, area, population)))
 rownames(communes_r@data) <- tmp
 
 
@@ -139,21 +149,20 @@ rownames(provinces_r@data) <- tmp
 
 
 # rearraging the communes, districts and provinces attributes ------------------
-communes_r@data <- communes_r@data[, c("province_id", "district_id", "commune_id",
-                                       "province", "district", "commune",
-                                       "province_vn", "district_vn", "commune_vn",
-                                       "shape_length", "shape_area", "area",
-                                       "population")]
+communes_r@data <- communes_r@data[, c("province_id", "district_id",
+                                       "commune_id", "province", "district",
+                                       "commune", "province_vn", "district_vn",
+                                       "commune_vn", "shape_length",
+                                       "shape_area", "area", "population")]
 
 districts_r@data <- districts_r@data[, c("province_id", "district_id",
-                                         "province", "district",
-                                         "province_vn", "district_vn",
-                                         "shape_length", "shape_area",
-                                         "area", "population")]
+                                         "province", "district", "province_vn",
+                                         "district_vn", "shape_length",
+                                         "shape_area", "area", "population")]
 
-provinces_r@data <- provinces_r@data[, c("province_id", "province", "province_vn",
-                                         "shape_length", "shape_area", "area",
-                                         "population")]
+provinces_r@data <- provinces_r@data[, c("province_id", "province",
+                                         "province_vn", "shape_length",
+                                         "shape_area", "area", "population")]
 
 
 # changing the feature IDs -----------------------------------------------------
